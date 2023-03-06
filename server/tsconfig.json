@@ -1,0 +1,11 @@
+{
+    "compilerOptions": {
+        "module": "NodeNext",
+        "target": "ESNext",
+        "moduleResolution": "NodeNext",
+        "lib": ["ESNext"],
+    },
+    "ts-node": {
+        "esm": true
+    }
+}
