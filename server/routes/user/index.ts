@@ -11,16 +11,24 @@ router.get('/', (req, res) => {
 })
 
 router.get('/me', (req, res) => {
-    const token = req.headers.authorization;
-    if (!token) {
-        return res.status(401).send('Unauthorized');
-    }
-    try {
-        const decoded = jwt.verify(token, process.env.JWT_SECRET);
-        res.send(decoded);
-    } catch (error) {
-        res.status(400).send('Invalid token');
-    }
+    console.log(JSON.stringify(req.headers));
+    // try {
+    //     const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    //     prisma.user.findUnique({
+    //         where: {
+    //             id: decoded.id
+    //         },
+    //         include: {
+    //             drawings: true
+    //         }
+    //     }).then(user => {
+    //         delete user.password;
+    //         res.send(user);
+    //     })
+    // } catch (error) {
+    //     res.status(400).send('Invalid token');
+    // }
+    res.status(200).send('ok')
 })
 
 router.post('/register', async (req, res) => {
@@ -52,7 +60,10 @@ router.post('/login', async (req, res) => {
         return res.status(400).send('Invalid password');
     }
     const token = jwt.sign({ id: user.id }, process.env.JWT_SECRET, { expiresIn: '24h' });
-    res.send(token);
+    res.send({
+        status: 'success',
+        token: token
+    });
 })
 
 export default router;

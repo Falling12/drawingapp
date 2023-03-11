@@ -15,6 +15,46 @@ router.get('/', async (req, res) => {
     res.send(draws);
 })
 
+router.post('/', async (req: IRequestWithUser, res) => {
+    console.log(JSON.stringify(req.body))
+    const { id, strokes } = req.body;
+
+    console.log(req.body);
+
+    const draw = await prisma.drawing.update({
+        where: {
+            id: Number(id)
+        },
+        data: {
+            strokes: {
+                connectOrCreate: strokes.map((stroke: any, index: number) => {
+                    console.log(index);
+                    return {
+                        where: {
+                            id: index
+                        },
+                        create: {
+                            points: {
+                                create: stroke.points
+                            }
+                        }
+                    }
+                })
+            }
+        },
+        include: {
+            strokes: {
+                include: {
+                    points: true
+                }
+            }
+        }
+    })
+
+    res.send(draw);
+})
+
+
 router.post('/new', async (req: IRequestWithUser, res) => {
     const { name, description } = req.body;
     console.log(req.user);

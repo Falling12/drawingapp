@@ -23,7 +23,7 @@ model Drawing {
   name      String
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id])
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   userId    Int
   strokes   Stroke[]
 }
@@ -32,16 +32,18 @@ model Stroke {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  drawing   Drawing  @relation(fields: [drawingId], references: [id])
+  drawing   Drawing  @relation(fields: [drawingId], references: [id], onDelete: Cascade)
   drawingId Int
   points    Point[]
+  color     String   @default("#000000")
+  size      Int      @default(1)
 }
 
 model Point {
   id        Int      @id @default(autoincrement())
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  stroke    Stroke   @relation(fields: [strokeId], references: [id])
+  stroke    Stroke   @relation(fields: [strokeId], references: [id], onDelete: Cascade)
   strokeId  Int
   x         Float
   y         Float
