@@ -1,10 +1,18 @@
 import React, { useEffect } from 'react'
 import { useNavigate } from 'react-router-dom'
 import LoginForm from '../components/LoginForm'
+import {useIsAuthenticated} from 'react-auth-kit';
 
 const Login = () => {
   let navigate = useNavigate()
+  const isAuthenticated = useIsAuthenticated()
 
+
+  useEffect(() => {
+    if (isAuthenticated()) {
+      navigate('/dashboard')
+    }
+  }, [])
   return (
     <div className={`h-[100vh] flex flex-col gap-[40px] justify-center items-center sm:px-3`} style={mainstyle}>
         <h1 className='font-semibold text-[40px]'>Bejelentkezés</h1>

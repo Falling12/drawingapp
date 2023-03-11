@@ -7,13 +7,13 @@ import Login from "./pages/Login";
 import { useDispatch } from "react-redux";
 import { setUser } from "./features/user/userSlice";
 import { getUser } from "./utils/user";
+import Draw from "./pages/Draw";
 
 const App = () => {
   const dispatch = useDispatch()
   useEffect(() => {
     (async () => {
       const user = await getUser()
-      console.log(user)
       dispatch(
         setUser(user)
       )
@@ -29,6 +29,12 @@ const App = () => {
           <Dashboard />
         </RequireAuth>
       }></Route>
+      <Route path="/draw/:id" element={
+        <RequireAuth loginPath={'/login'}>
+          <Draw />
+        </RequireAuth>
+      }></Route>
+      <Route path="*" element={<div>404</div>}></Route>
     </Routes>
   );
 };

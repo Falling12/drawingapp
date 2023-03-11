@@ -11,24 +11,24 @@ router.get('/', (req, res) => {
 })
 
 router.get('/me', (req, res) => {
-    console.log(JSON.stringify(req.headers));
-    // try {
-    //     const decoded = jwt.verify(token, process.env.JWT_SECRET);
-    //     prisma.user.findUnique({
-    //         where: {
-    //             id: decoded.id
-    //         },
-    //         include: {
-    //             drawings: true
-    //         }
-    //     }).then(user => {
-    //         delete user.password;
-    //         res.send(user);
-    //     })
-    // } catch (error) {
-    //     res.status(400).send('Invalid token');
-    // }
-    res.status(200).send('ok')
+    const token = req.cookies._auth;
+
+    if (!token) {
+        return res.status(401).send('Unauthorized');
+    }
+    try {
+        const decoded = jwt.verify(token, process.env.JWT_SECRET);
+        prisma.user.findUnique({
+            where: {
+                id: decoded.id
+            }
+        }).then(user => {
+            delete user.password;
+            res.send(user);
+        })
+    } catch (error) {
+        res.status(400).send('Invalid token');
+    }
 })
 
 router.post('/register', async (req, res) => {

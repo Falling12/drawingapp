@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react'
-import { Drawing, Stroke, Point } from '../../types'
+import { IDrawing, Stroke, Point } from '../../types'
 
-function DrawingCanvas() {
-    const [drawing, setDrawing] = useState<Drawing | null>(null);
+function DrawingCanvas({ drawing: initialDrawing }: { drawing: IDrawing | null}) {
+    const [drawing, setDrawing] = useState<IDrawing | null>(initialDrawing);
     const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement>(null);

@@ -1,9 +1,11 @@
 import { configureStore } from "@reduxjs/toolkit";
 import userReducer from "./features/user/userSlice";
+import drawingReducer from "./features/drawings/drawingSlice";
 
 export const store = configureStore({
     reducer: {
         user: userReducer,
+        drawings: drawingReducer
     },
 });
 

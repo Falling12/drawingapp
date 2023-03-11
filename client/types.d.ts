@@ -16,7 +16,8 @@ export interface Stroke {
     size: number;
 }
 
-export interface Drawing {
+export interface IDrawing {
     strokes: Stroke[];
-    id: number
+    id: number | null,
+    name: string;
 }

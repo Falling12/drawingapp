@@ -6,10 +6,10 @@ const router = Router();
 
 const prisma = new PrismaClient()
 
-router.get('/', async (req, res) => {
+router.get('/', async (req: IRequestWithUser, res) => {
     const draws = await prisma.drawing.findMany({
         where: {
-            userId: 1
+            userId: req.user.id
         },
     })
     res.send(draws);

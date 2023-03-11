@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { Drawing, User } from '../../../types';
+import type { IDrawing, User } from '../../../types';
 
 const initialState: User = {
     name: '',

@@ -1,5 +1,6 @@
 import { client } from "../api";
-import type { Drawing, User } from "../../types";
+import type { IDrawing, User } from "../../types";
+import axios from "axios";
 
 export const login = async(data: {
     email: string;
