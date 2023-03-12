@@ -20,44 +20,27 @@ router.post('/', async (req: IRequestWithUser, res) => {
     const { id, strokes } = req.body;
 
     console.log(req.body);
-
-    const draw = await prisma.drawing.update({
-        where: {
-            id: Number(id)
-        },
-        data: {
-            strokes: {
-                connectOrCreate: strokes.map((stroke: any, index: number) => {
-                    console.log(index);
-                    return {
-                        where: {
-                            id: index
-                        },
-                        create: {
-                            points: {
-                                create: stroke.points
-                            }
-                        }
-                    }
-                })
-            }
-        },
-        include: {
-            strokes: {
-                include: {
-                    points: true
+    const stroke = await prisma.stroke.createMany({
+        data: strokes.map((stroke: any) => ({
+            drawingId: id,
+            points: {
+                createMany: {
+                    data: stroke.points.map((point: any) => ({
+                        x: point.x,
+                        y: point.y
+                    }))
                 }
             }
-        }
+        }))
     })
 
-    res.send(draw);
+    res.send(stroke);
 })
 
 
 router.post('/new', async (req: IRequestWithUser, res) => {
     const { name, description } = req.body;
-    console.log(req.user);
+    console.log(req.body)
     const draw = await prisma.drawing.create({
         data: {
             name,
@@ -82,6 +65,16 @@ router.get('/:id', async (req, res) => {
         }
     })
     res.send(draw);
+})
+
+router.delete('/:id', async (req, res) => {
+    const { id } = req.params;
+    await prisma.drawing.delete({
+        where: {
+            id: Number(id)
+        }
+    })
+    res.status(200).send({'message': 'Deleted'});
 })
 
 export default router;

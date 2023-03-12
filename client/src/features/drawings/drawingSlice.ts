@@ -1,6 +1,6 @@
 import { createSlice } from '@reduxjs/toolkit';
 import type { PayloadAction } from '@reduxjs/toolkit';
-import type { IDrawing } from '../../../types';
+import type { IDrawing, Stroke } from '../../../types';
 
 const initialState = {
     drawings: [] as IDrawing[],
@@ -13,16 +13,27 @@ export const drawingSlice = createSlice({
     reducers: {
         setDrawings: (state, action) => {
             const drawing = action.payload as IDrawing[];
-            drawing.forEach(d => (
-                state.drawings.push(d)
-            ));
+            state.drawings = drawing;
         },
         setDrawing: (state, action) => {
             const drawing = action.payload as IDrawing;
             state.drawing = drawing;
+        },
+        editDrawing: (state, action) => {
+            const drawing = action.payload as IDrawing;
+            const index = state.drawings.findIndex(d => d.id === drawing.id);
+            state.drawings[index] = drawing;
+        },
+        addStrokes: (state, action) => {
+            const stroke = action.payload as Stroke;
+            state.drawing.strokes.push(stroke);
+        },
+        addImg: (state, action) => {
+            const img = action.payload as string;
+            state.drawing.image = img;
         }
     }
 });
 
-export const { setDrawings, setDrawing } = drawingSlice.actions;
+export const { setDrawings, setDrawing, editDrawing, addStrokes, addImg } = drawingSlice.actions;
 export default drawingSlice.reducer;

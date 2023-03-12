@@ -21,7 +21,7 @@ export default function LoginForm() {
             
             if(signIn({
                 token: res.token,
-                expiresIn: 3600,
+                expiresIn: 3600 * 24,
                 tokenType: 'Bearer',
                 authState: {
                     user: null

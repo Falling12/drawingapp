@@ -26,7 +26,7 @@ const Draw = () => {
 
     return loading ? <div>Loading...</div> : (
         <div>
-            <DrawingCanvas drawing={drawing} key={1} />
+            <DrawingCanvas key={1} />
         </div>
     )
 }

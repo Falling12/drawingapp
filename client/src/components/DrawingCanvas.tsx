@@ -1,17 +1,23 @@
 import React, { useState, useEffect, useRef } from 'react'
+import { useDispatch, useSelector } from 'react-redux';
 import { IDrawing, Stroke, Point } from '../../types'
+import { addImg, addStrokes, editDrawing, setDrawing } from '../features/drawings/drawingSlice';
+import { updateDrawing } from '../utils/drawings';
 
-function DrawingCanvas({ drawing: initialDrawing }: { drawing: IDrawing | null}) {
-    const [drawing, setDrawing] = useState<IDrawing | null>(initialDrawing);
+function DrawingCanvas() {
+    const drawing = useSelector((state: any) => state.drawings.drawing)
     const [currentStroke, setCurrentStroke] = useState<Stroke | null>(null);
     const [isDrawing, setIsDrawing] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement>(null);
+    const dispatch = useDispatch()
 
     useEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
         if (ctx) {
             setContext(ctx);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, canvasWidth, canvasHeight);
         }
     }, []);
 
@@ -45,20 +51,15 @@ function DrawingCanvas({ drawing: initialDrawing }: { drawing: IDrawing | null})
 
     function endStroke() {
         if (!currentStroke) return;
-        const newDrawing = drawing ? { ...drawing } : { strokes: [], id: 2 };
-        newDrawing.strokes.push(currentStroke);
-        setDrawing(newDrawing);
+        dispatch(addStrokes(currentStroke))
+        dispatch(editDrawing(drawing))
         setCurrentStroke(null);
         setIsDrawing(false);
+        dispatch(addImg(canvasRef.current?.toDataURL("image/png") ?? ''))
 
-        fetch('http://localhost:3000/draws/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-                'Authorization': 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6MSwiaWF0IjoxNjc4NTI1NjY5LCJleHAiOjE2Nzg2MTIwNjl9.zeaDCyF-LK798g-a9JgCjN1bVkUkk663qjy0AdRpDmg'
-            },
-            body: JSON.stringify(newDrawing)
-        })
+        console.log(drawing)
+
+        updateDrawing(drawing)
     }
 
     const canvasWidth = 600;
@@ -68,7 +69,7 @@ function DrawingCanvas({ drawing: initialDrawing }: { drawing: IDrawing | null})
         if (!context) return;
         context.clearRect(0, 0, canvasWidth, canvasHeight);
         if (!drawing) return;
-        drawing.strokes.forEach((stroke) => {
+        drawing.strokes.forEach((stroke: Stroke) => {
             context.strokeStyle = stroke.color;
             context.lineWidth = stroke.size;
             context.beginPath();
