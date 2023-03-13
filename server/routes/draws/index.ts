@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { Router } from "express";
 import { PrismaClient } from "@prisma/client";
 import { IRequestWithUser } from "../../types";
@@ -16,25 +17,68 @@ router.get('/', async (req: IRequestWithUser, res) => {
 })
 
 router.post('/', async (req: IRequestWithUser, res) => {
-    console.log(JSON.stringify(req.body))
     const { id, strokes } = req.body;
 
-    console.log(req.body);
-    const stroke = await prisma.stroke.createMany({
-        data: strokes.map((stroke: any) => ({
-            drawingId: id,
-            points: {
-                createMany: {
-                    data: stroke.points.map((point: any) => ({
-                        x: point.x,
-                        y: point.y
-                    }))
+    let ids = []
+    let pointIds = []
+    
+    for(let i = 0; i < strokes.length; i++) {
+        const stroke = strokes[i];
+        const points = stroke.points;
+        delete stroke.points;
+        delete stroke.id;
+
+        const newStroke = await prisma.stroke.create({
+            data: {
+                ...stroke,
+                drawingId: Number(id)
+            },
+        })
+
+        ids.push(newStroke.id)
+
+        for(let j = 0; j < points.length; j++) {
+            const point = points[j];
+            delete point.id;
+            console.log(point)
+            const newPoint = await prisma.point.create({
+                data: {
+                    ...point,
+                    strokeId: newStroke.id
+                },
+            })
+
+            pointIds.push(newPoint.id)
+        }
+
+        // link points to stroke
+
+        await prisma.stroke.update({
+            where: {
+                id: newStroke.id
+            },
+            data: {
+                points: {
+                    connect: pointIds.map(id => ({id}))
                 }
             }
-        }))
+        })
+    }
+
+    //link strokes to drawing
+
+    const newStrokes = await prisma.drawing.update({
+        where: {
+            id: Number(id)
+        },
+        data: {
+            strokes: {
+                connect: ids.map(id => ({id}))
+            }
+        }
     })
 
-    res.send(stroke);
+    res.status(200).send({'message': 'Saved'});
 })
 
 

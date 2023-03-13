@@ -24,9 +24,11 @@ export const drawingSlice = createSlice({
             const index = state.drawings.findIndex(d => d.id === drawing.id);
             state.drawings[index] = drawing;
         },
-        addStrokes: (state, action) => {
+        addStroke: (state, action) => {
             const stroke = action.payload as Stroke;
+            console.log(stroke);
             state.drawing.strokes.push(stroke);
+            console.log(state.drawing.strokes);
         },
         addImg: (state, action) => {
             const img = action.payload as string;
@@ -35,5 +37,5 @@ export const drawingSlice = createSlice({
     }
 });
 
-export const { setDrawings, setDrawing, editDrawing, addStrokes, addImg } = drawingSlice.actions;
+export const { setDrawings, setDrawing, editDrawing, addStroke, addImg } = drawingSlice.actions;
 export default drawingSlice.reducer;

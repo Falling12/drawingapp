@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { IDrawing, Stroke, Point } from '../../types'
-import { addImg, addStrokes, editDrawing, setDrawing } from '../features/drawings/drawingSlice';
+import { addImg, addStroke, editDrawing, setDrawing } from '../features/drawings/drawingSlice';
 import { updateDrawing } from '../utils/drawings';
 
 function DrawingCanvas() {
@@ -49,17 +49,15 @@ function DrawingCanvas() {
         setCurrentStroke(newStroke);
     }
 
-    function endStroke() {
+    async function endStroke() {
         if (!currentStroke) return;
-        dispatch(addStrokes(currentStroke))
-        dispatch(editDrawing(drawing))
+        console.log(currentStroke)
+        dispatch(addStroke(currentStroke))
+        dispatch(addImg(canvasRef.current?.toDataURL("image/png") ?? ''))
         setCurrentStroke(null);
         setIsDrawing(false);
-        dispatch(addImg(canvasRef.current?.toDataURL("image/png") ?? ''))
 
-        console.log(drawing)
-
-        updateDrawing(drawing)
+        await updateDrawing(drawing)
     }
 
     const canvasWidth = 600;
@@ -73,6 +71,7 @@ function DrawingCanvas() {
             context.strokeStyle = stroke.color;
             context.lineWidth = stroke.size;
             context.beginPath();
+            if(stroke.points.length === 0) return
             const firstPoint = stroke.points[0];
             context.moveTo(firstPoint.x, firstPoint.y);
             stroke.points.forEach((point) => {
