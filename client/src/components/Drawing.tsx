@@ -24,9 +24,9 @@ const Drawing = ({
     }
 
     return (
-        <div className='w-[300px] h-[200px] border-2 rounded-xl hover:scale-105 transition-all'>
-            <div className='w-full h-full overflow-hidden relative bg-white'>
-                <img src={drawing.image} className='w-full h-full object-cover aspect-[16/9] blur-[5px]' alt='asd'/>
+        <div className='w-[300px] h-[200px] border-2 rounded-xl hover:scale-105 transition-all overflow-hidden'>
+            <div className='w-full h-full overflow-hidden relative bg-black'>
+                <img src={drawing.image || '/dummy.webp'} className='w-full h-full object-cover aspect-[16/9] blur-[5px]' alt='asd'/>
                 <div className='absolute inset-0 w-full h-full bg-black bg-opacity-30 flex flex-col justify-center items-center gap-3'>
                     <h1 className='uppercase max-w-[200px] overflow-hidden whitespace-nowrap text-ellipsis'>{drawing.name}</h1>
                     <div className='flex gap-2'>

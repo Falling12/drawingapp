@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { IDrawing, Stroke, Point } from '../../types'
 import { addImg, addStroke, editDrawing, setDrawing } from '../features/drawings/drawingSlice';
+import useCreateDrawing from '../hooks/useCreateDrawing';
 import { updateDrawing } from '../utils/drawings';
 
 function DrawingCanvas() {
@@ -10,7 +11,11 @@ function DrawingCanvas() {
     const [isDrawing, setIsDrawing] = useState(false);
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const dispatch = useDispatch()
+    const [canvasWidth, setCanvasWidth] = useState(window.innerWidth + 100);
+    const [canvasHeight, setCanvasHeight] = useState(window.innerHeight + 100);
+    const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
 
+    //define canvas
     useEffect(() => {
         const canvas = canvasRef.current;
         const ctx = canvas?.getContext('2d');
@@ -18,11 +23,21 @@ function DrawingCanvas() {
             setContext(ctx);
             ctx.fillStyle = 'white';
             ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            ctx.lineCap = 'round';
         }
     }, []);
 
-    const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
+    //draw existing strokes
+    useCreateDrawing({
+        canvasHeight,
+        canvasWidth,
+        context,
+        drawing,
+        isDrawing,
+        currentStroke
+    })
 
+    //start drawing
     function startStroke(event: React.MouseEvent<HTMLCanvasElement>) {
         const { clientX, clientY } = event;
         const { left, top } = canvasRef.current?.getBoundingClientRect() ?? { left: 0, top: 0 };
@@ -30,13 +45,14 @@ function DrawingCanvas() {
         const y = clientY - top;
         const newStroke = {
             points: [{ x, y }],
-            color: 'black',
+            color: 'white',
             size: 5,
         };
         setCurrentStroke(newStroke);
         setIsDrawing(true);
     }
 
+    //add points to stroke
     function addPoint(event: React.MouseEvent<HTMLCanvasElement>) {
         if (!isDrawing || !currentStroke) return;
         const { clientX, clientY } = event;
@@ -49,6 +65,7 @@ function DrawingCanvas() {
         setCurrentStroke(newStroke);
     }
 
+    //end drawing
     async function endStroke() {
         if (!currentStroke) return;
         console.log(currentStroke)
@@ -57,40 +74,42 @@ function DrawingCanvas() {
         setCurrentStroke(null);
         setIsDrawing(false);
 
+
         await updateDrawing(drawing)
     }
 
-    const canvasWidth = 600;
-    const canvasHeight = 400;
+    //resize canvas
+    useEffect(() => {
+        function handleResize() {
+            const canvas = canvasRef.current;
+            const ctx = canvas?.getContext('2d');
+            if (ctx) {
+                setContext(ctx);
+                setCanvasWidth(window.innerWidth);
+                setCanvasHeight(window.innerHeight);
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            }
+        }
+        window.addEventListener('resize', handleResize)
+        return () => window.removeEventListener('resize', handleResize)
+    }, [])
 
     useEffect(() => {
-        if (!context) return;
-        context.clearRect(0, 0, canvasWidth, canvasHeight);
-        if (!drawing) return;
-        drawing.strokes.forEach((stroke: Stroke) => {
-            context.strokeStyle = stroke.color;
-            context.lineWidth = stroke.size;
-            context.beginPath();
-            if(stroke.points.length === 0) return
-            const firstPoint = stroke.points[0];
-            context.moveTo(firstPoint.x, firstPoint.y);
-            stroke.points.forEach((point) => {
-                context.lineTo(point.x, point.y);
-            });
-            context.stroke();
-        });
-        if (isDrawing && currentStroke) {
-            context.strokeStyle = currentStroke.color;
-            context.lineWidth = currentStroke.size;
-            context.beginPath();
-            const firstPoint = currentStroke.points[0];
-            context.moveTo(firstPoint.x, firstPoint.y);
-            currentStroke.points.forEach((point) => {
-                context.lineTo(point.x, point.y);
-            });
-            context.stroke();
+        function handleScroll() {
+            const canvas = canvasRef.current;
+            const ctx = canvas?.getContext('2d');
+            if (ctx) {
+                setContext(ctx);
+                setCanvasWidth(window.innerWidth + 100);
+                setCanvasHeight(window.innerHeight + 100);
+                ctx.fillStyle = 'white';
+                ctx.fillRect(0, 0, canvasWidth, canvasHeight);
+            }
         }
-    }, [drawing, context, canvasWidth, canvasHeight, isDrawing, currentStroke]);
+        window.addEventListener('scroll', handleScroll)
+        return () => window.removeEventListener('resize', handleScroll)
+    }, [])
 
     return (
         <canvas
@@ -101,6 +120,7 @@ function DrawingCanvas() {
             onMouseMove={addPoint}
             onMouseUp={endStroke}
             onMouseLeave={endStroke}
+            style={{ width: canvasWidth, height: canvasHeight }}
         />
     );
 }

@@ -8,6 +8,15 @@ body {
   background-color: black;
 }
 
+body::-webkit-scrollbar {
+  display: none;
+}
+
 canvas {
-  background-color: white;
+  background-color: black;
+  cursor: crosshair;
+  image-rendering: pixelated;
+  touch-action: none;
+  position: absolute;
+  inset: 0;
 }

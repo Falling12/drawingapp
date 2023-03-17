@@ -4,6 +4,7 @@ import { useParams } from 'react-router-dom'
 import DrawingCanvas from '../components/DrawingCanvas'
 import { setDrawing } from '../features/drawings/drawingSlice'
 import { getDrawing } from '../utils/drawings'
+import '../styles/Draw.css'
 
 const Draw = () => {
     const { id } = useParams<{ id: any }>()
@@ -25,8 +26,13 @@ const Draw = () => {
     }, [])
 
     return loading ? <div>Loading...</div> : (
-        <div>
-            <DrawingCanvas key={1} />
+        <div className='min-h-full h-full relative main'>
+            <div className='w-full h-full'>
+                <div className='w-full h-full'>
+                    <a>asd</a>
+                </div>
+                <DrawingCanvas key={'canvas'} />
+            </div>
         </div>
     )
 }

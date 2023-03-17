@@ -1,7 +1,7 @@
-// @ts-nocheck
 import { Router } from "express";
-import { PrismaClient } from "@prisma/client";
-import { IRequestWithUser } from "../../types";
+import { PrismaClient, Stroke } from "@prisma/client";
+import { IRequestWithUser, IStroke } from "../../types";
+import { filterExistingStrokes, deleteUnnecessary } from "../../utils/draws";
 
 const router = Router();
 
@@ -17,18 +17,40 @@ router.get('/', async (req: IRequestWithUser, res) => {
 })
 
 router.post('/', async (req: IRequestWithUser, res) => {
-    const { id, strokes } = req.body;
+    let { id, strokes, image }: { id: number, strokes: IStroke[], image: string } = req.body;
 
     let ids = []
     let pointIds = []
+
+    const dbStrokes = await prisma.stroke.findMany({
+        where: {
+            drawingId: Number(id)
+        },
+        include: {
+            points: true
+        }
+    })
+
+    deleteUnnecessary(strokes)
+    deleteUnnecessary(dbStrokes)
+    dbStrokes.forEach(element => {
+        deleteUnnecessary(element.points)
+    });
+    strokes.forEach(element => {
+        deleteUnnecessary(element.points)
+    });
+
     
     for(let i = 0; i < strokes.length; i++) {
-        const stroke = strokes[i];
+        const stroke = filterExistingStrokes(dbStrokes, strokes)[i];
+        if(stroke === undefined) {
+            break
+        }
         const points = stroke.points;
         delete stroke.points;
-        delete stroke.id;
 
         const newStroke = await prisma.stroke.create({
+            // @ts-ignore
             data: {
                 ...stroke,
                 drawingId: Number(id)
@@ -39,8 +61,6 @@ router.post('/', async (req: IRequestWithUser, res) => {
 
         for(let j = 0; j < points.length; j++) {
             const point = points[j];
-            delete point.id;
-            console.log(point)
             const newPoint = await prisma.point.create({
                 data: {
                     ...point,
@@ -74,7 +94,8 @@ router.post('/', async (req: IRequestWithUser, res) => {
         data: {
             strokes: {
                 connect: ids.map(id => ({id}))
-            }
+            },
+            image
         }
     })
 
