@@ -26,12 +26,15 @@ const Draw = () => {
     }, [])
 
     return loading ? <div>Loading...</div> : (
-        <div className='min-h-full h-full relative main'>
-            <div className='w-full h-full'>
-                <div className='w-full h-full'>
-                    <a>asd</a>
+        <div className='h-full'>
+            <div className='inset-0 overflow-hidden relative w-full h-full flex select-none'>
+                <div className='ui-wrapper absolute inset-0 w-full h-full z-[3]'>
+                    <div className='bg-slate-500 w-[40px] h-[40px] cursor-pointer'>
+                    </div>
                 </div>
-                <DrawingCanvas key={'canvas'} />
+                <main>
+                    <DrawingCanvas key={'canvas'} />
+                </main>
             </div>
         </div>
     )

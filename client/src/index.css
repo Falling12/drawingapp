@@ -6,6 +6,9 @@
 
 body {
   background-color: black;
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
 }
 
 body::-webkit-scrollbar {
@@ -17,6 +20,19 @@ canvas {
   cursor: crosshair;
   image-rendering: pixelated;
   touch-action: none;
-  position: absolute;
-  inset: 0;
+}
+
+.user-dropdown-enter {
+  opacity: 0;
+}
+.user-dropdown-enter-active {
+  opacity: 1;
+  transition: opacity 200ms;
+}
+.user-dropdown-exit {
+  opacity: 1;
+}
+.user-dropdown-exit-active {
+  opacity: 0;
+  transition: opacity 200ms;
 }

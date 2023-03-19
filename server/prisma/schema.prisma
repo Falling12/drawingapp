@@ -16,6 +16,7 @@ model User {
   name     String
   password String
   drawings Drawing[]
+  pfp      String?   @default("")
 }
 
 model Drawing {
