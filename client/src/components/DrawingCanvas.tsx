@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { IDrawing, Stroke, Point } from '../../types'
-import { addImg, addStroke, editDrawing, setDrawing } from '../features/drawings/drawingSlice';
+import { addImg, addStroke, editDrawing, setDrawing, setOffset, setScale } from '../features/drawings/drawingSlice';
 import useCreateDrawing from '../hooks/useCreateDrawing';
 import { updateDrawing } from '../utils/drawings';
 
@@ -15,13 +15,13 @@ function DrawingCanvas() {
     const [context, setContext] = useState<CanvasRenderingContext2D | null>(null);
     const [leftMouseDown, setLeftMouseDown] = useState(false);
     const [rightMouseDown, setRightMouseDown] = useState(false);
-    const [offsetX, setOffsetX] = useState(0);
-    const [offsetY, setOffsetY] = useState(0);
+    const offsetX = drawing.lastState.offset[0] || 0;
+    const offsetY = drawing.lastState.offset[1] || 0;
     const [mouseX, setMouseX] = useState(0);
     const [mouseY, setMouseY] = useState(0);
     const [prevMouseX, setPrevMouseX] = useState(0);
     const [prevMouseY, setPrevMouseY] = useState(0);
-    const [scale, setScale] = useState(1);
+    const scale = useSelector((state: any) => state.drawings.drawing.lastState.scale);
 
     useEffect(() => {
         document.oncontextmenu = function () {
@@ -141,8 +141,7 @@ function DrawingCanvas() {
         }
 
         if(rightMouseDown) {
-            setOffsetX(offsetX + (mouseX - prevMouseX) / scale);
-            setOffsetY(offsetY + (mouseY - prevMouseY) / scale);
+            dispatch(setOffset([offsetX + (mouseX - prevMouseX) / scale, offsetY + (mouseY - prevMouseY) / scale]))
             redraw();
         }
 
@@ -151,14 +150,24 @@ function DrawingCanvas() {
     }
 
     function onMouseWheel(event: React.WheelEvent<HTMLCanvasElement>) {
+        //check for the ctrl key
+        if(!event.ctrlKey) return;
         const deltaY = event.deltaY;
-        const scaleAmount = -deltaY / 500;
-        if((scale * (1 + scaleAmount) - 1) * 100 < -99) return
-        setScale(scale * (1 + scaleAmount));
-
-        // console log the scale amount in percentage
-        console.log((scale * (1 + scaleAmount) - 1) * 100);
-
+        const scaleAmount = -deltaY / 1000;
+        console.log(scaleAmount);
+        if(scale * (1 + scaleAmount) < 0.1){
+            if(scale * 100 >= 15) {
+                dispatch(setScale(0.1));
+            }
+            return
+        };
+        if(scale * (1 + scaleAmount) > 1){
+            if(scale * 100 <= 95) {
+                dispatch(setScale(1));
+            }
+            return
+        };
+        dispatch(setScale(scale * (1 + scaleAmount)));
 
         // zoom the page based on where the cursor is
         if(!canvasRef.current) return;
@@ -172,8 +181,7 @@ function DrawingCanvas() {
         const unitsAddLeft = unitsZoomedX * distX;
         const unitsAddTop = unitsZoomedY * distY;
 
-        setOffsetX(offsetX - unitsAddLeft);
-        setOffsetY(offsetY - unitsAddTop);
+        dispatch(setOffset([offsetX - unitsAddLeft, offsetY - unitsAddTop]))
 
         redraw();
     }
@@ -210,7 +218,7 @@ function DrawingCanvas() {
 
     return (
         <canvas
-            className='absolute z-[3]'
+            className='absolute z-[1]'
             ref={canvasRef}
             width={canvasWidth}
             height={canvasHeight}
@@ -220,7 +228,7 @@ function DrawingCanvas() {
             onMouseOut={onMouseUp}
             onMouseLeave={onMouseUp}
             onWheel={onMouseWheel}
-            style={{ width: canvasWidth, height: canvasHeight, cursor: rightMouseDown ? 'grabbing' : '' }}
+            style={{ width: canvasWidth, height: canvasHeight, cursor: rightMouseDown ? 'grabbing' : 'crosshair' }}
         />
     );
 }

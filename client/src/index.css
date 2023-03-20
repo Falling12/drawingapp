@@ -17,7 +17,6 @@ body::-webkit-scrollbar {
 
 canvas {
   background-color: black;
-  cursor: crosshair;
   image-rendering: pixelated;
   touch-action: none;
 }

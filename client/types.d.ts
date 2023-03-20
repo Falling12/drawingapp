@@ -21,4 +21,10 @@ export interface IDrawing {
     id: number | null,
     name: string,
     image: string,
+    lastState: LastState
+}
+
+export interface LastState {
+    scale: number;
+    offset: [number, number];
 }

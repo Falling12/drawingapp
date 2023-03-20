@@ -33,9 +33,17 @@ export const drawingSlice = createSlice({
         addImg: (state, action) => {
             const img = action.payload as string;
             state.drawing.image = img;
+        },
+        setScale: (state, action) => {
+            const scale = action.payload as number;
+            state.drawing.lastState.scale = scale;
+        },
+        setOffset: (state, action) => {
+            const offset = action.payload as [number, number];
+            state.drawing.lastState.offset = offset;
         }
     }
 });
 
-export const { setDrawings, setDrawing, editDrawing, addStroke, addImg } = drawingSlice.actions;
+export const { setDrawings, setDrawing, editDrawing, addStroke, addImg, setScale, setOffset } = drawingSlice.actions;
 export default drawingSlice.reducer;

@@ -1,0 +1,2 @@
+-- AlterTable
+ALTER TABLE "LastState" ALTER COLUMN "offset" SET DATA TYPE DOUBLE PRECISION[];

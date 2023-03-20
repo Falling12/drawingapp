@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { PrismaClient, Stroke } from "@prisma/client";
+import { LastState, PrismaClient, Stroke } from "@prisma/client";
 import { IRequestWithUser, IStroke } from "../../types";
 import { filterExistingStrokes, deleteUnnecessary } from "../../utils/draws";
 
@@ -17,7 +17,7 @@ router.get('/', async (req: IRequestWithUser, res) => {
 })
 
 router.post('/', async (req: IRequestWithUser, res) => {
-    let { id, strokes, image }: { id: number, strokes: IStroke[], image: string } = req.body;
+    let { id, strokes, image, lastState }: { id: number, strokes: IStroke[], image: string, lastState: LastState } = req.body;
 
     let ids = []
     let pointIds = []
@@ -85,15 +85,39 @@ router.post('/', async (req: IRequestWithUser, res) => {
         })
     }
 
-    //link strokes to drawing
+    let lastStateId
+    //if lastState is undefined in db, create it
+    if(!lastState.id) {
+        const lastStateNew = await prisma.lastState.create({
+            data: {
+                ...lastState
+            }
+        })
+        lastStateId = lastStateNew.id
+    }else {
+        await prisma.lastState.update({
+            where: {
+                id: lastState.id
+            },
+            data: {
+                ...lastState
+            }
+        })
+    }
 
-    const newStrokes = await prisma.drawing.update({
+    //link strokes to drawing
+    await prisma.drawing.update({
         where: {
             id: Number(id)
         },
         data: {
             strokes: {
                 connect: ids.map(id => ({id}))
+            },
+            lastState: {
+                connect: {
+                    id: lastState.id ? lastState.id : lastStateId
+                }
             },
             image
         }
@@ -106,10 +130,20 @@ router.post('/', async (req: IRequestWithUser, res) => {
 router.post('/new', async (req: IRequestWithUser, res) => {
     const { name, description } = req.body;
     console.log(req.body)
+
+    const lastState = await prisma.lastState.create({
+        data: {
+            scale: 1,
+            offset: [0, 0]
+        }
+    })
+
     const draw = await prisma.drawing.create({
+        // @ts-ignore
         data: {
             name,
-            userId: req.user.id
+            userId: req.user.id,
+            lastStateId: lastState.id,
         }
     })
     res.send(draw);
@@ -126,7 +160,8 @@ router.get('/:id', async (req, res) => {
                 include: {
                     points: true
                 }
-            }
+            },
+            lastState: true
         }
     })
     res.send(draw);
