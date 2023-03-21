@@ -28,3 +28,9 @@ export interface LastState {
     scale: number;
     offset: [number, number];
 }
+
+export interface ITool {
+    name: string;
+    icon: string;
+    active: boolean;
+}

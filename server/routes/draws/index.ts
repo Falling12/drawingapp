@@ -134,7 +134,8 @@ router.post('/new', async (req: IRequestWithUser, res) => {
     const lastState = await prisma.lastState.create({
         data: {
             scale: 1,
-            offset: [0, 0]
+            offset: [0, 0],
+            tool: 'pen',
         }
     })
 

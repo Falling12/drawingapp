@@ -59,5 +59,6 @@ model LastState {
   updatedAt DateTime @updatedAt
   offset    Float[]
   scale     Float
+  tool      String
   Drawing   Drawing?
 }
