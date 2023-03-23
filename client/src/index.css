@@ -19,6 +19,7 @@ canvas {
   background-color: black;
   image-rendering: pixelated;
   touch-action: none;
+  cursor: crosshair;
 }
 
 .user-dropdown-enter {

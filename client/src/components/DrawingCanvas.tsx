@@ -1,8 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react'
 import { useDispatch, useSelector } from 'react-redux';
 import { IDrawing, Stroke, Point } from '../../types'
-import { addImg, addStroke, editDrawing, setDrawing, setOffset, setScale } from '../features/drawings/drawingSlice';
-import useCreateDrawing from '../hooks/useCreateDrawing';
+import { addImg, addStroke, editDrawing, removeStroke, setDrawing, setOffset, setScale } from '../features/drawings/drawingSlice';
 import { updateDrawing } from '../utils/drawings';
 
 function DrawingCanvas() {
@@ -22,6 +21,7 @@ function DrawingCanvas() {
     const [prevMouseX, setPrevMouseX] = useState(0);
     const [prevMouseY, setPrevMouseY] = useState(0);
     const scale = useSelector((state: any) => state.drawings.drawing.lastState.scale);
+    const tool = useSelector((state: any) => state.drawings.drawing.lastState.tool);
 
     useEffect(() => {
         document.oncontextmenu = function () {
@@ -124,25 +124,60 @@ function DrawingCanvas() {
         const scaledY = toTrueY(event.pageY);
 
         if(leftMouseDown) {
-            if(!currentStroke) {
-                const newStroke: Stroke = {
-                    color: 'white',
-                    size: 5,
-                    points: []
+            async function toolSwitch(tool: string) {
+                switch(tool.toLowerCase()) {
+                    case 'pen':
+                        if(!currentStroke) {
+                            const newStroke: Stroke = {
+                                color: 'white',
+                                size: 5,
+                                points: []
+                            }
+                            setCurrentStroke(newStroke);
+                        }
+                        if(!currentStroke) return;
+                        const newPoint = { x: scaledX, y: scaledY };
+                        const newPoints = [...currentStroke.points, newPoint];
+                        const newStroke = { ...currentStroke, points: newPoints };
+                        setCurrentStroke(newStroke);
+                        redraw();
+                        break;
+                    case 'eraser':
+                        const toDelete: Stroke[] = [];
+                        console.log('eraser');
+                        drawing.strokes.forEach((stroke: Stroke) => {
+                            stroke.points.find((point: Point) => {
+                                if(Math.abs(point.x - scaledX) < 5 && Math.abs(point.y - scaledY) < 5) {
+                                    toDelete.push(stroke);
+                                    dispatch(
+                                        removeStroke(stroke.id)
+                                    )
+                                    redraw();
+                                }
+                            })
+                        });
+                        //send to server with the strokes to delete
+                        const toSend: IDrawing = {
+                            id: drawing.id,
+                            strokes: toDelete,
+                            lastState: drawing.lastState,
+                            name: drawing.name,
+                            image: drawing.image
+                        }
+                        const res = await updateDrawing(toSend);
+                        dispatch(
+                            setDrawing(res.newDrawing)
+                        )
+                        break;
+                    case 'hand':
+                        if(!canvasRef.current) return;
+                        canvasRef.current.style.cursor = 'grabbing';
+                        dispatch(setOffset([offsetX + (mouseX - prevMouseX) / scale, offsetY + (mouseY - prevMouseY) / scale]))
+                        redraw();
+                        break;
                 }
-                setCurrentStroke(newStroke);
             }
-            if(!currentStroke) return;
-            const newPoint = { x: scaledX, y: scaledY };
-            const newPoints = [...currentStroke.points, newPoint];
-            const newStroke = { ...currentStroke, points: newPoints };
-            setCurrentStroke(newStroke);
-            redraw();
-        }
-
-        if(rightMouseDown) {
-            dispatch(setOffset([offsetX + (mouseX - prevMouseX) / scale, offsetY + (mouseY - prevMouseY) / scale]))
-            redraw();
+            toolSwitch(tool);
         }
 
         setPrevMouseX(mouseX);
@@ -189,14 +224,24 @@ function DrawingCanvas() {
     //end drawing
     async function onMouseUp(event: React.MouseEvent<HTMLCanvasElement>) {
         setRightMouseDown(false);
-        if (!currentStroke) return;
         setLeftMouseDown(false);
+        if(tool === 'hand') {
+            if(!canvasRef.current) return;
+            canvasRef.current.style.cursor = 'grab';
+        }
+        if (!currentStroke) return;
         dispatch(addStroke(currentStroke))
         dispatch(addImg(canvasRef.current?.toDataURL("image/png") ?? ''))
         setCurrentStroke(null);
         redraw();
 
-        await updateDrawing(drawing)
+        if(tool === 'pen') {
+            const res = await updateDrawing(drawing);
+            // dispatch(
+            //     setDrawing(res.newDrawing)
+            // )
+            // redraw();
+        }
     }
 
     //resize canvas
@@ -228,7 +273,7 @@ function DrawingCanvas() {
             onMouseOut={onMouseUp}
             onMouseLeave={onMouseUp}
             onWheel={onMouseWheel}
-            style={{ width: canvasWidth, height: canvasHeight, cursor: rightMouseDown ? 'grabbing' : 'crosshair' }}
+            style={{ width: canvasWidth, height: canvasHeight, cursor: tool == 'hand' ? 'grab' : 'crosshair' }}
         />
     );
 }

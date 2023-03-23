@@ -11,6 +11,7 @@ export interface Point {
 }
 
 export interface Stroke {
+    id?: number | null;
     points: Point[];
     color: string;
     size: number;
@@ -27,6 +28,7 @@ export interface IDrawing {
 export interface LastState {
     scale: number;
     offset: [number, number];
+    tool: string;
 }
 
 export interface ITool {

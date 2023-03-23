@@ -41,9 +41,19 @@ export const drawingSlice = createSlice({
         setOffset: (state, action) => {
             const offset = action.payload as [number, number];
             state.drawing.lastState.offset = offset;
+        },
+        setTool: (state, action) => {
+            const tool = action.payload as string;
+            state.drawing.lastState.tool = tool;
+        },
+        removeStroke: (state, action) => {
+            console.log('remove stroke');
+            const id = action.payload as number;
+            const index = state.drawing.strokes.findIndex(s => s.id === id);
+            state.drawing.strokes.splice(index, 1);
         }
     }
 });
 
-export const { setDrawings, setDrawing, editDrawing, addStroke, addImg, setScale, setOffset } = drawingSlice.actions;
+export const { setDrawings, setDrawing, editDrawing, addStroke, addImg, setScale, setOffset, setTool, removeStroke } = drawingSlice.actions;
 export default drawingSlice.reducer;

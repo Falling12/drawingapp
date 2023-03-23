@@ -21,92 +21,100 @@ router.post('/', async (req: IRequestWithUser, res) => {
 
     let ids = []
     let pointIds = []
+    let lastStateId
 
-    const dbStrokes = await prisma.stroke.findMany({
-        where: {
-            drawingId: Number(id)
-        },
-        include: {
-            points: true
-        }
-    })
 
-    deleteUnnecessary(strokes)
-    deleteUnnecessary(dbStrokes)
-    dbStrokes.forEach(element => {
-        deleteUnnecessary(element.points)
-    });
-    strokes.forEach(element => {
-        deleteUnnecessary(element.points)
-    });
-
-    
-    for(let i = 0; i < strokes.length; i++) {
-        const stroke = filterExistingStrokes(dbStrokes, strokes)[i];
-        if(stroke === undefined) {
-            break
-        }
-        const points = stroke.points;
-        delete stroke.points;
-
-        const newStroke = await prisma.stroke.create({
-            // @ts-ignore
-            data: {
-                ...stroke,
+    if(lastState.tool == 'pen') {
+        const dbStrokes = await prisma.stroke.findMany({
+            where: {
                 drawingId: Number(id)
             },
+            include: {
+                points: true
+            }
         })
-
-        ids.push(newStroke.id)
-
-        for(let j = 0; j < points.length; j++) {
-            const point = points[j];
-            const newPoint = await prisma.point.create({
+    
+        deleteUnnecessary(strokes)
+        deleteUnnecessary(dbStrokes)
+        dbStrokes.forEach(element => {
+            deleteUnnecessary(element.points)
+        });
+        strokes.forEach(element => {
+            deleteUnnecessary(element.points)
+        });
+    
+        
+        for(let i = 0; i < strokes.length; i++) {
+            const stroke = filterExistingStrokes(dbStrokes, strokes)[i];
+            if(stroke === undefined) {
+                break
+            }
+            const points = stroke.points;
+            delete stroke.points;
+    
+            const newStroke = await prisma.stroke.create({
+                // @ts-ignore
                 data: {
-                    ...point,
-                    strokeId: newStroke.id
+                    ...stroke,
+                    drawingId: Number(id)
                 },
             })
-
-            pointIds.push(newPoint.id)
+    
+            ids.push(newStroke.id)
+    
+            for(let j = 0; j < points.length; j++) {
+                const point = points[j];
+                const newPoint = await prisma.point.create({
+                    data: {
+                        ...point,
+                        strokeId: newStroke.id
+                    },
+                })
+    
+                pointIds.push(newPoint.id)
+            }
+    
+            // link points to stroke
+    
+            await prisma.stroke.update({
+                where: {
+                    id: newStroke.id
+                },
+                data: {
+                    points: {
+                        connect: pointIds.map(id => ({id}))
+                    }
+                }
+            })
         }
 
-        // link points to stroke
-
-        await prisma.stroke.update({
-            where: {
-                id: newStroke.id
-            },
-            data: {
-                points: {
-                    connect: pointIds.map(id => ({id}))
+        //if lastState is undefined in db, create it
+        if(!lastState.id) {
+            const lastStateNew = await prisma.lastState.create({
+                data: {
+                    ...lastState
                 }
-            }
-        })
+            })
+            lastStateId = lastStateNew.id
+        }else {
+            await prisma.lastState.update({
+                where: {
+                    id: lastState.id
+                },
+                data: {
+                    ...lastState
+                }
+            })
+        }
+    }
+    else if(lastState.tool == 'eraser') {
+        //update the strokes in db and set it to the strokes in req.body
+        console.log(strokes)
     }
 
-    let lastStateId
-    //if lastState is undefined in db, create it
-    if(!lastState.id) {
-        const lastStateNew = await prisma.lastState.create({
-            data: {
-                ...lastState
-            }
-        })
-        lastStateId = lastStateNew.id
-    }else {
-        await prisma.lastState.update({
-            where: {
-                id: lastState.id
-            },
-            data: {
-                ...lastState
-            }
-        })
-    }
 
     //link strokes to drawing
-    await prisma.drawing.update({
+    const newDrawing = await prisma.drawing.update({
         where: {
             id: Number(id)
         },
@@ -120,12 +128,19 @@ router.post('/', async (req: IRequestWithUser, res) => {
                 }
             },
             image
+        },
+        include: {
+            strokes: {
+                include: {
+                    points: true
+                }
+            },
+            lastState: true
         }
     })
 
-    res.status(200).send({'message': 'Saved'});
+    res.status(200).send({newDrawing, "message": "Updated"});
 })
-
 
 router.post('/new', async (req: IRequestWithUser, res) => {
     const { name, description } = req.body;
